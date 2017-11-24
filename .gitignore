@@ -1,0 +1,11 @@
+# Mac app simulator
+simulator
+
+# Data
+data
+
+# Intellij
+.idea
+
+# Ipynb Notebooks
+notebooks
