@@ -8,4 +8,4 @@ data
 .idea
 
 # Ipynb Notebooks
-# notebooks
+notebooks/.ipynb_checkpoints
