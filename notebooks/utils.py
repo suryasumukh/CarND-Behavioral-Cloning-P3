@@ -25,9 +25,13 @@ class ImageGenerator(Sequence):
         self.train_images = []
         self.steering_angles = []
         for sample in samples:
-            self.train_images.extend(sample[: 3])
+            self.train_images.extend([(False, img) for img in sample[: 3]])
             self.steering_angles.extend([float(sample[3])] * 3)
         self.steering_angles = np.array(self.steering_angles)
+        if flip:
+            for sample in samples:
+                self.train_images.extend([(True, img) for img in sample[: 3]])
+            self.steering_angles = np.hstack((self.steering_angles, -self.steering_angles))
         self._len = len(self.steering_angles)
         self.batch_size = batch_size
         if gray:
@@ -40,12 +44,16 @@ class ImageGenerator(Sequence):
 
     def __getitem__(self, item):
         x_batch = []
-        for img_path in self.train_images[item: item+self.batch_size]:
+        for to_flip, img_path in self.train_images[item: item + self.batch_size]:
             img = cv2.imread(img_path, flags=self.cv_flag)
+            if to_flip:
+                img = cv2.flip(img, 1)
             img = img[60: 140]
             x_batch.append(img)
         x_batch = np.array(x_batch)
-        y_batch = np.array(self.steering_angles[item: item+self.batch_size])
+        y_batch = self.steering_angles[item: item + self.batch_size]
+        if self.cv_flag == cv2.IMREAD_GRAYSCALE:
+            x_batch = np.expand_dims(x_batch, axis=3)
         return x_batch, y_batch
 
     def on_epoch_end(self):
