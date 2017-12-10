@@ -9,3 +9,8 @@ data
 
 # Ipynb Notebooks
 notebooks/.ipynb_checkpoints
+notebooks/__pycache__
+
+# Models
+*.h5
+*.hdf5
