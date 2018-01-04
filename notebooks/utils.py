@@ -9,7 +9,8 @@ import os
 
 def read_samples(data_dir):
     samples = []
-    train_runs = [os.path.join(data_dir, run_dir) for run_dir in ['run1', 'run2']]
+    run_dirs = ['run1', 'run2', 'run3']
+    train_runs = [os.path.join(data_dir, run_dir) for run_dir in run_dirs]
     for run_dir in train_runs:
         driving_log = os.path.join(run_dir, 'driving_log.csv')
         with open(driving_log, 'r') as _file:
@@ -21,12 +22,13 @@ def read_samples(data_dir):
 
 
 class ImageGenerator(Sequence):
-    def __init__(self, samples, batch_size, gray=True, flip=False):
+    def __init__(self, samples, batch_size, gray=True, flip=False, left_corr=0, right_corr=0):
         self.train_images = []
         self.steering_angles = []
         for sample in samples:
             self.train_images.extend([(False, img) for img in sample[: 3]])
-            self.steering_angles.extend([float(sample[3])] * 3)
+            angle = float(sample[3])
+            self.steering_angles.extend([angle, angle+left_corr, angle-right_corr])
         self.steering_angles = np.array(self.steering_angles)
         if flip:
             for sample in samples:
