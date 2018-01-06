@@ -9,7 +9,7 @@ import os
 
 def read_samples(data_dir):
     samples = []
-    run_dirs = ['run1', 'run2', 'run3', 'run4']
+    run_dirs = ['sample-data']
     train_runs = [os.path.join(data_dir, run_dir) for run_dir in run_dirs]
     for run_dir in train_runs:
         driving_log = os.path.join(run_dir, 'driving_log.csv')
@@ -48,9 +48,12 @@ class ImageGenerator(Sequence):
         x_batch = []
         for to_flip, img_path in self.train_images[item: item + self.batch_size]:
             img = cv2.imread(img_path, flags=self.cv_flag)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)[:, :, 2]
             if to_flip:
                 img = cv2.flip(img, 1)
             img = img[60: 140]
+            img = cv2.resize(img, (320, 160), interpolation=cv2.INTER_CUBIC)
+            img = np.expand_dims(img, axis=2)
             x_batch.append(img)
         x_batch = np.array(x_batch)
         y_batch = self.steering_angles[item: item + self.batch_size]
@@ -88,9 +91,12 @@ class CenterImageGenerator(Sequence):
         x_batch = []
         for to_flip, img_path in self.train_images[item: item + self.batch_size]:
             img = cv2.imread(img_path, flags=self.cv_flag)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)[:, :, 2]
             if to_flip:
                 img = cv2.flip(img, 1)
             img = img[60: 140]
+            img = cv2.resize(img, (320, 160), interpolation=cv2.INTER_CUBIC)
+            img = np.expand_dims(img, axis=2)
             x_batch.append(img)
         x_batch = np.array(x_batch)
         y_batch = self.steering_angles[item: item + self.batch_size]
