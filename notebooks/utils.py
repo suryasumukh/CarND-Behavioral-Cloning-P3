@@ -9,7 +9,7 @@ import os
 
 def read_samples(data_dir):
     samples = []
-    run_dirs = ['run1', 'run2', 'run3']
+    run_dirs = ['run1', 'run2', 'run3', 'run4']
     train_runs = [os.path.join(data_dir, run_dir) for run_dir in run_dirs]
     for run_dir in train_runs:
         driving_log = os.path.join(run_dir, 'driving_log.csv')
