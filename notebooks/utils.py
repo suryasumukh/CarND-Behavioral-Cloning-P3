@@ -20,6 +20,18 @@ def read_samples(data_dir):
     print('Loaded {} samples.'.format(len(samples)))
     return samples
 
+def random_shear(image,steering,shear_range):
+    rows,cols,ch = image.shape
+    dx = np.random.randint(-shear_range,shear_range+1)
+    #    print('dx',dx)
+    random_point = [cols/2+dx,rows/2]
+    pts1 = np.float32([[0,rows],[cols,rows],[cols/2,rows/2]])
+    pts2 = np.float32([[0,rows],[cols,rows],random_point])
+    dsteering = dx/(rows/2) * 360/(2*np.pi*25.0) / 6.0
+    M = cv2.getAffineTransform(pts1,pts2)
+    image = cv2.warpAffine(image,M,(cols,rows),borderMode=1)
+    steering +=dsteering
+    return image,steering
 
 class ImageGenerator(Sequence):
     def __init__(self, samples, batch_size, corr=0.0):
@@ -45,14 +57,16 @@ class ImageGenerator(Sequence):
     def __len__(self):
         return (self._len + self.batch_size - 1) // self.batch_size
 
-    def preprocess(self, sample):
+    def preprocess(self, sample, angle):
         flip, img_path = sample
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
+        if np.random.choice(2):
+            image, angle = random_shear(image, angle, shear_range=100)
         if flip:
             image = cv2.flip(image, 1)
         image = cv2.resize(image, (320, 160))
-        return np.expand_dims(image, axis=2)
+        return np.expand_dims(image, axis=2), angle
 
     def __getitem__(self, item):
         x_batch = np.empty([self.batch_size, 160, 320, 1])
@@ -60,25 +74,21 @@ class ImageGenerator(Sequence):
         i = 0
         while len(y_batch) < self.batch_size:
             idx = np.random.choice(self._len)
-<<<<<<< HEAD
-            if np.absolute(self.steering_angles[idx]) <= 0.2:
-=======
-            if 1.5 < np.absolute(self.steering_angles[idx]) < 0.3:
-                if np.random.uniform() < 0.3:
-                    y_batch.append(self.steering_angles[idx])
-                    x_batch[i] = self.preprocess(self.samples[idx])
+            img, angle = self.preprocess(self.samples[idx], self.steering_angles[idx])
+            if np.absolute(angle) < 0.1:
+                if np.random.uniform() < 0.2:
+                    y_batch.append(angle)
+                    x_batch[i] = img
                     i += 1
-            elif 0 < np.absolute(self.steering_angles[idx]) < 1.0:
->>>>>>> 548aa04aeb5e4694e91b5a8251ee80593b80003f
-                if np.random.uniform() < 0.3:
-                    y_batch.append(self.steering_angles[idx])
-                    x_batch[i] = self.preprocess(self.samples[idx])
+            elif 0.15 < np.absolute(self.steering_angles[idx]) < 0.3:
+                if np.random.uniform() < 0.2:
+                    y_batch.append(angle)
+                    x_batch[i] = img
                     i += 1
             else:
-                y_batch.append(self.steering_angles[idx])
-                x_batch[i] = self.preprocess(self.samples[idx])
+                y_batch.append(angle)
+                x_batch[i] = img
                 i += 1
-
         return x_batch, np.array(y_batch)
 
     def on_epoch_end(self):
