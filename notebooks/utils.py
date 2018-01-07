@@ -39,27 +39,43 @@ class ImageGenerator(Sequence):
 
         self.steering_angles = np.array(self.steering_angles)
         self._len = len(self.steering_angles)
-        
+
         self.samples, self.steering_angles = shuffle(self.samples, self.steering_angles)
 
     def __len__(self):
         return (self._len + self.batch_size - 1) // self.batch_size
 
+    def preprocess(self, sample):
+        flip, img_path = sample
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
+        if flip:
+            image = cv2.flip(image, 1)
+        image = cv2.resize(image, (320, 160))
+        return np.expand_dims(image, axis=2)
+
     def __getitem__(self, item):
         x_batch = np.empty([self.batch_size, 160, 320, 1])
-        y_batch = self.steering_angles[item: item + self.batch_size]
+        y_batch = []
         i = 0
-        for flip, img_path in self.samples[item: item + self.batch_size]:
-            img = cv2.imread(img_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)[:, :, 2]
-            if flip:
-                img = cv2.flip(img, 1)
-            img = img[60: 140]
-            img = cv2.resize(img, (320, 160), interpolation=cv2.INTER_CUBIC)
-            x_batch[i] = np.expand_dims(img, axis=2)
-            i += 1
+        while len(y_batch) < self.batch_size:
+            idx = np.random.choice(self._len)
+            if 1.5 < np.absolute(self.steering_angles[idx]) < 0.3:
+                if np.random.uniform() < 0.3:
+                    y_batch.append(self.steering_angles[idx])
+                    x_batch[i] = self.preprocess(self.samples[idx])
+                    i += 1
+            elif 0 < np.absolute(self.steering_angles[idx]) < 1.0:
+                if np.random.uniform() < 0.3:
+                    y_batch.append(self.steering_angles[idx])
+                    x_batch[i] = self.preprocess(self.samples[idx])
+                    i += 1
+            else:
+                y_batch.append(self.steering_angles[idx])
+                x_batch[i] = self.preprocess(self.samples[idx])
+                i += 1
 
-        return x_batch, y_batch
+        return x_batch, np.array(y_batch)
 
     def on_epoch_end(self):
         self.samples, self.steering_angles = shuffle(self.samples, self.steering_angles)
