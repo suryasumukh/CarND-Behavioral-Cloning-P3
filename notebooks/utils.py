@@ -60,7 +60,16 @@ class ImageGenerator(Sequence):
         i = 0
         while len(y_batch) < self.batch_size:
             idx = np.random.choice(self._len)
+<<<<<<< HEAD
             if np.absolute(self.steering_angles[idx]) <= 0.2:
+=======
+            if 1.5 < np.absolute(self.steering_angles[idx]) < 0.3:
+                if np.random.uniform() < 0.3:
+                    y_batch.append(self.steering_angles[idx])
+                    x_batch[i] = self.preprocess(self.samples[idx])
+                    i += 1
+            elif 0 < np.absolute(self.steering_angles[idx]) < 1.0:
+>>>>>>> 548aa04aeb5e4694e91b5a8251ee80593b80003f
                 if np.random.uniform() < 0.3:
                     y_batch.append(self.steering_angles[idx])
                     x_batch[i] = self.preprocess(self.samples[idx])
