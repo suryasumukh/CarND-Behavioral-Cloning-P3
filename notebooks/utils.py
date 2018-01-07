@@ -60,9 +60,9 @@ class ImageGenerator(Sequence):
     def preprocess(self, sample, angle):
         flip, img_path = sample
         image = cv2.imread(img_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
         if np.random.choice(2):
             image, angle = random_shear(image, angle, shear_range=100)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
         if flip:
             image = cv2.flip(image, 1)
         image = cv2.resize(image, (320, 160))
@@ -75,19 +75,68 @@ class ImageGenerator(Sequence):
         while len(y_batch) < self.batch_size:
             idx = np.random.choice(self._len)
             img, angle = self.preprocess(self.samples[idx], self.steering_angles[idx])
+            y_batch.append(angle)
+            x_batch[i] = img
+            i += 1
+        return x_batch, np.array(y_batch)
+
+    def on_epoch_end(self):
+        self.samples, self.steering_angles = shuffle(self.samples, self.steering_angles)
+
+
+class ImageGenerator1(Sequence):
+    def __init__(self, samples, batch_size, corr=0.0):
+        self.batch_size = batch_size
+        self.corr = corr
+
+        self.samples = []
+        self.steering_angles = []
+
+        for sample in samples:
+            for img_path in sample[: 3]:
+                self.samples.append((False, img_path))
+                self.samples.append((True, img_path))
+            angle = float(sample[3])
+            angles = [angle, -angle, angle+corr, -(angle+corr), angle-corr, -(angle-corr)]
+            self.steering_angles.extend(angles)
+
+        self.steering_angles = np.array(self.steering_angles)
+        self._len = len(self.steering_angles)
+
+        self.samples, self.steering_angles = shuffle(self.samples, self.steering_angles)
+
+    def __len__(self):
+        return (self._len + self.batch_size - 1) // self.batch_size
+
+    def preprocess(self, sample):
+        flip, img_path = sample
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
+        if flip:
+            image = cv2.flip(image, 1)
+        image = cv2.resize(image, (320, 160))
+        return np.expand_dims(image, axis=2)
+
+    def __getitem__(self, item):
+        x_batch = np.empty([self.batch_size, 160, 320, 1])
+        y_batch = []
+        i = 0
+        while len(y_batch) < self.batch_size:
+            idx = np.random.choice(self._len)
+            angle = self.steering_angles[idx]
             if np.absolute(angle) < 0.1:
                 if np.random.uniform() < 0.2:
                     y_batch.append(angle)
-                    x_batch[i] = img
+                    x_batch[i] = self.preprocess(self.samples[idx])
                     i += 1
             elif 0.15 < np.absolute(self.steering_angles[idx]) < 0.3:
                 if np.random.uniform() < 0.2:
                     y_batch.append(angle)
-                    x_batch[i] = img
+                    x_batch[i] = self.preprocess(self.samples[idx])
                     i += 1
             else:
                 y_batch.append(angle)
-                x_batch[i] = img
+                x_batch[i] = self.preprocess(self.samples[idx])
                 i += 1
         return x_batch, np.array(y_batch)
 
