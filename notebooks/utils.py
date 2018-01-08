@@ -114,11 +114,11 @@ class ImageGenerator1(Sequence):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[70: 140, :, 2]
         if flip:
             image = cv2.flip(image, 1)
-        image = cv2.resize(image, (320, 160))
+        # image = cv2.resize(image, (320, 160))
         return np.expand_dims(image, axis=2)
 
     def __getitem__(self, item):
-        x_batch = np.empty([self.batch_size, 160, 320, 1])
+        x_batch = np.empty([self.batch_size, 70, 320, 1])
         y_batch = []
         i = 0
         while len(y_batch) < self.batch_size:
@@ -173,8 +173,8 @@ class CenterImageGenerator(Sequence):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)[:, :, 2]
             if to_flip:
                 img = cv2.flip(img, 1)
-            img = img[60: 140]
-            img = cv2.resize(img, (320, 160), interpolation=cv2.INTER_CUBIC)
+            img = img[70: 140]
+            # img = cv2.resize(img, (320, 160), interpolation=cv2.INTER_CUBIC)
             img = np.expand_dims(img, axis=2)
             x_batch.append(img)
         x_batch = np.array(x_batch)
