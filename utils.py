@@ -127,7 +127,7 @@ class CenterImageGenerator(Sequence):
         i = 0
         for img_path in self.samples[item: item+self.batch_size]:
             x_batch[i] = self.preprocess(img_path)
-
+            i += 1
         return x_batch, np.array(y_batch)
 
     def on_epoch_end(self):

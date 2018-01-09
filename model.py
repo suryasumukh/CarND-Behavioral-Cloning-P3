@@ -86,7 +86,7 @@ def main():
                     validation_data=valid_iterator,
                     steps_per_epoch=len(train_iterator),
                     validation_steps=len(valid_iterator),
-                    callbacks=[checkpoint]
+                    callbacks=[checkpoint, early_stopping]
                    )
     print('Done.')
 
