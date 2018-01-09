@@ -61,11 +61,13 @@ For all experiments, the provided sample data was used. Train set was augmented 
 #### Model parameter tuning
 
 The model used an adam optimizer, so the learning rate was not tuned manually (`model.py` line 57). The following are the values of parameters that performed well on the validation set and the simulator.
+
 * epochs: 10
 * learning rate: 0.001  
 * batch size: 128  
 * angle correction: 0.2  
 * input shape: 70, 320, 1  
+
 The validation mse is around ~0.0136 for these parameters, train mse was around ~0.0221 and test mse was ~0.0122.
 The training is started with `epoch=10`, the early stopping callback usually stops between 6-8 epochs.
 
@@ -124,4 +126,4 @@ The validation and test generators produce only center camera images. The code f
 
 #### Video
 
-Here's the link to the video output - [test_drive.py](./test_drive.mp4)
+Here's the link to the video output - [test_drive.mp4](./test_drive.mp4)
