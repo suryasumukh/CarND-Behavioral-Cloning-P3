@@ -105,7 +105,7 @@ class CenterImageGenerator(Sequence):
         for sample in samples:
             self.samples.append(sample[0])
             angle = float(sample[3])
-            self.steering_angles.extend(angles)
+            self.steering_angles.append(angle)
 
         self.steering_angles = np.array(self.steering_angles)
         self._len = len(self.steering_angles)
@@ -127,7 +127,7 @@ class CenterImageGenerator(Sequence):
         i = 0
         for img_path in self.samples[item: item+self.batch_size]:
             x_batch[i] = self.preprocess(img_path)
-
+            i += 1
         return x_batch, np.array(y_batch)
 
     def on_epoch_end(self):
